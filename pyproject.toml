@@ -19,3 +19,9 @@ Homepage = "https://github.com/henrynitzberg/pubchem_requests_python"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
+
+dependencies = [
+    "python-stdnum",
+    "requests",
+    "pytest",
+]
