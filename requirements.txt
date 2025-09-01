@@ -1,3 +1,0 @@
-python-stdnum
-requests
-pytest
