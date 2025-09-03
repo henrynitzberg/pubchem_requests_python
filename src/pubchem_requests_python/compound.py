@@ -56,14 +56,16 @@ class Compound:
             logger.error(f"Failed to retrieve compound information for CID {self.cid}.")
             self.found_compound = False
 
-    def _get_view_items(
-        self, data
-    ) -> tuple[
-        str, list[str] | None, list[str] | None, list[str] | None, list[str] | None
+    def _get_view_items(self, data) -> tuple[
+        str | None,
+        list[str] | None,
+        list[str] | None,
+        list[str] | None,
+        list[str] | None,
     ]:
         sections = data.get("Record", {}).get("Section", [])
 
-        name = data.get("Record", {}).get("RecordTitle", "")
+        name = data.get("Record", {}).get("RecordTitle", None)
 
         cas_numbers = list[str]()
         descriptions = list[str]()
@@ -99,9 +101,9 @@ class Compound:
                                     for item in info.get("Value", {}).get(
                                         "StringWithMarkup", []
                                     ):
-                                        name = item.get("String", "")
-                                        if not is_valid_cas(name):
-                                            synonyms.append(name)
+                                        synonym = item.get("String", "")
+                                        if not is_valid_cas(synonym):
+                                            synonyms.append(synonym)
             elif heading == "Safety and Hazards":
                 for subsection in section.get("Section", []):
                     if subsection.get("TOCHeading") == "Hazards Identification":
@@ -161,11 +163,15 @@ class Compound:
 
         if synonyms:
             self.synonyms = synonyms
-            if not self.name:
-                self.name = name
         else:
             logger.error(f"No synonyms found for CID {self.cid}")
             self.synonyms = None
+
+        if not self.name:
+            self.name = name if name else synonyms[0] if synonyms else None
+        if not self.name:
+            logger.error(f"No name found for CID {self.cid}")
+            self.name = None
 
         if cas_numbers and not self.cas:
             cas_counter = collections.Counter(cas_numbers)

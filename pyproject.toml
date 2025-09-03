@@ -1,6 +1,6 @@
 [project]
 name = "pubchem-requests-python"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   { name="Henry Nitzberg", email="henrynitzberg@gmail.com" },
 ]

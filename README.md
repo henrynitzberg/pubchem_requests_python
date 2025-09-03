@@ -73,6 +73,7 @@ Note: It is possible for a compound to be found, but for some of its information
 
 ### Future work
 - The PUG View response contains 'Experimental Properties' which vary from compound to compound, but generally contain information about the physical form/appearance of a compound at room temperature, information about boiling point, odor, taste, etc. This could be incorporated into the compound class.
+- Lower level logging.
 
 ## Individual Requests
 
