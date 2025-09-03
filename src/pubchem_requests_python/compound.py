@@ -58,8 +58,12 @@ class Compound:
 
     def _get_view_items(
         self, data
-    ) -> tuple[list[str] | None, list[str] | None, list[str] | None, list[str] | None]:
+    ) -> tuple[
+        str, list[str] | None, list[str] | None, list[str] | None, list[str] | None
+    ]:
         sections = data.get("Record", {}).get("Section", [])
+
+        name = data.get("Record", {}).get("RecordTitle", "")
 
         cas_numbers = list[str]()
         descriptions = list[str]()
@@ -116,7 +120,7 @@ class Compound:
                                     ):
                                         summaries.append(item.get("String", ""))
 
-        return synonyms, cas_numbers, descriptions, summaries
+        return name, synonyms, cas_numbers, descriptions, summaries
 
     def _get_rest_items(self, data) -> tuple[str | None, float | None, float | None]:
         props = data.get("PC_Compounds", [{}])[0].get("props", [])
@@ -152,13 +156,13 @@ class Compound:
             view_future = executor.submit(self._get_view_items, view_data)
             rest_future = executor.submit(self._get_rest_items, rest_data)
 
-            synonyms, cas_numbers, descriptions, summaries = view_future.result()
+            name, synonyms, cas_numbers, descriptions, summaries = view_future.result()
             molecular_formula, molecular_weight, molar_mass = rest_future.result()
 
         if synonyms:
             self.synonyms = synonyms
             if not self.name:
-                self.name = self.synonyms[0]
+                self.name = name
         else:
             logger.error(f"No synonyms found for CID {self.cid}")
             self.synonyms = None
