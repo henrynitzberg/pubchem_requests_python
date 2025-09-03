@@ -68,7 +68,7 @@ class Compound:
         cas_numbers = list[str]()
         descriptions = list[str]()
         summaries = list[str]()
-        synonyms = list[str]()
+        synonyms = [name] if name else list[str]()
         for section in sections:
             heading = section.get("TOCHeading", "")
             if heading == "Names and Identifiers":

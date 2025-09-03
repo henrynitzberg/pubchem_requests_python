@@ -94,14 +94,13 @@ def cid_to_name(cid: str) -> str | None:
     """Get the compound name from a PubChem Compound ID (CID). Returns first synonym."""
     logger.info(f"Fetching name for CID {cid}")
 
-    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        synonyms = data["InformationList"]["Information"][0]["Synonym"]
-        synonyms = [s for s in synonyms if not is_valid_cas(s)]
-        return synonyms[0] if synonyms else None
+        name = data.get("Record", {}).get("RecordTitle", None)
+        return name
     except requests.RequestException as e:
         logger.error(f"Error fetching name from PubChem for CID {cid}: {e}")
         return None
@@ -111,13 +110,33 @@ def cid_to_names(cid: str) -> list[str] | None:
     """Get the compound names from a PubChem Compound ID (CID). Returns all synonyms."""
     logger.info(f"Fetching names for CID {cid}")
 
-    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/synonyms/JSON"
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON"
     try:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        synonyms = data["InformationList"]["Information"][0]["Synonym"]
-        synonyms = [s for s in synonyms if not is_valid_cas(s)]
+        name = data.get("Record", {}).get("RecordTitle", None)
+        synonyms = [name]
+
+        sections = data.get("Record", {}).get("Section", [])
+        for section in sections:
+            heading = section.get("TOCHeading", "")
+            if heading == "Names and Identifiers":
+                for subsection in section.get("Section", []):
+                    heading = subsection.get("TOCHeading", "")
+                    if heading == "Synonyms":
+                        for subsubsection in subsection.get("Section", []):
+                            if (
+                                subsubsection.get("TOCHeading", "")
+                                == "Depositor-Supplied Synonyms"
+                            ):
+                                for info in subsubsection.get("Information", []):
+                                    for item in info.get("Value", {}).get(
+                                        "StringWithMarkup", []
+                                    ):
+                                        name = item.get("String", "")
+                                        if not is_valid_cas(name):
+                                            synonyms.append(name)
         return synonyms if synonyms else None
     except requests.RequestException as e:
         logger.error(f"Error fetching names from PubChem for CID {cid}: {e}")
